@@ -10,14 +10,15 @@ const gridSize = 20;
 const tileCount = canvas.width / gridSize;
 let snake = [{x: 10, y: 10}];
 let food = {x: 15, y: 15};
-let dx = 1; // 水平方向速度
-let dy = 0; // 垂直方向速度
-let nextDx = 1; // 下一次水平方向速度
+let dx = 1; // 水平方向速度（1右，-1左）
+let dy = 0; // 垂直方向速度（1下，-1上）
+let nextDx = 1; // 下一次水平方向速度（解决按键冲突）
 let nextDy = 0; // 下一次垂直方向速度
 let score = 0;
 let gameLoop;
 let isPaused = false;
 let gameSpeed = 150; // 初始速度(毫秒)
+let isGameRunning = false; // 新增：标记游戏是否正在运行
 
 // 初始化游戏
 function initGame() {
@@ -29,6 +30,7 @@ function initGame() {
     score = 0;
     scoreElement.textContent = score;
     generateFood();
+    isGameRunning = false; // 重置游戏状态
 }
 
 // 生成食物
@@ -57,7 +59,7 @@ function draw() {
         ctx.fillRect(
             segment.x * gridSize, 
             segment.y * gridSize, 
-            gridSize - 1, // 减1是为了显示网格效果
+            gridSize - 1, // 网格间隙
             gridSize - 1
         );
     }
@@ -76,14 +78,14 @@ function draw() {
 function update() {
     if (isPaused) return;
     
-    // 更新方向
+    // 更新方向（解决快速按键冲突）
     dx = nextDx;
     dy = nextDy;
     
     // 创建新头部
     const head = {x: snake[0].x + dx, y: snake[0].y + dy};
     
-    // 检查碰撞
+    // 碰撞检测
     // 墙壁碰撞
     if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
         gameOver();
@@ -101,20 +103,20 @@ function update() {
     // 添加新头部
     snake.unshift(head);
     
-    // 检查是否吃到食物
+    // 吃到食物处理
     if (head.x === food.x && head.y === food.y) {
         score += 10;
         scoreElement.textContent = score;
         generateFood();
         
-        // 每得50分加速一次
+        // 加速逻辑（每50分加速）
         if (score % 50 === 0 && gameSpeed > 50) {
             gameSpeed -= 10;
             clearInterval(gameLoop);
             gameLoop = setInterval(game, gameSpeed);
         }
     } else {
-        // 没吃到食物就移除尾部
+        // 没吃到食物则移除尾部
         snake.pop();
     }
     
@@ -129,58 +131,65 @@ function game() {
 // 游戏结束
 function gameOver() {
     clearInterval(gameLoop);
+    isGameRunning = false;
     alert(`游戏结束! 最终得分: ${score}`);
     initGame();
     draw();
 }
 
-// 处理键盘输入
+// 处理键盘输入（核心优化部分）
 function handleKeyPress(e) {
-    const LEFT_KEY = 37;
-    const RIGHT_KEY = 39;
-    const UP_KEY = 38;
-    const DOWN_KEY = 40;
-    const W_KEY = 87;
-    const A_KEY = 65;
-    const S_KEY = 83;
-    const D_KEY = 68;
+    // 阻止按键默认行为（如页面滚动）
+    e.preventDefault();
     
     const keyPressed = e.keyCode;
     
-    // 防止180度转向
+    // 当前移动方向（用于防止180度转向）
     const goingUp = dy === -1;
     const goingDown = dy === 1;
     const goingRight = dx === 1;
     const goingLeft = dx === -1;
     
-    if ((keyPressed === LEFT_KEY || keyPressed === A_KEY) && !goingRight) {
-        nextDx = -1;
-        nextDy = 0;
-    }
-    if ((keyPressed === UP_KEY || keyPressed === W_KEY) && !goingDown) {
-        nextDx = 0;
-        nextDy = -1;
-    }
-    if ((keyPressed === RIGHT_KEY || keyPressed === D_KEY) && !goingLeft) {
-        nextDx = 1;
-        nextDy = 0;
-    }
-    if ((keyPressed === DOWN_KEY || keyPressed === S_KEY) && !goingUp) {
-        nextDx = 0;
-        nextDy = 1;
+    // 方向键/WASD控制（仅在游戏运行时生效）
+    if (isGameRunning) {
+        // 左移（←或A）
+        if ((keyPressed === 37 || keyPressed === 65) && !goingRight) {
+            nextDx = -1;
+            nextDy = 0;
+        }
+        // 上移（↑或W）
+        if ((keyPressed === 38 || keyPressed === 87) && !goingDown) {
+            nextDx = 0;
+            nextDy = -1;
+        }
+        // 右移（→或D）
+        if ((keyPressed === 39 || keyPressed === 68) && !goingLeft) {
+            nextDx = 1;
+            nextDy = 0;
+        }
+        // 下移（↓或S）
+        if ((keyPressed === 40 || keyPressed === 83) && !goingUp) {
+            nextDx = 0;
+            nextDy = 1;
+        }
     }
 }
 
 // 事件监听
 document.addEventListener('keydown', handleKeyPress);
 
+// 开始游戏按钮
 startBtn.addEventListener('click', () => {
     if (gameLoop) clearInterval(gameLoop);
     isPaused = false;
+    isGameRunning = true; // 标记游戏开始
+    pauseBtn.textContent = "暂停"; // 重置暂停按钮文字
     gameLoop = setInterval(game, gameSpeed);
 });
 
+// 暂停/继续按钮
 pauseBtn.addEventListener('click', () => {
+    if (!isGameRunning) return; // 游戏未开始时不响应
     isPaused = !isPaused;
     pauseBtn.textContent = isPaused ? "继续" : "暂停";
 });
