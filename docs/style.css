@@ -54,3 +54,27 @@ button:hover {
     margin-top: 15px;
     color: #666;
 }
+
+/* 新增：方向按钮样式 */
+.direction-buttons {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px; /* 按钮间距 */
+}
+
+.middle-buttons {
+    display: flex;
+    gap: 5px; /* 左右按钮间距 */
+}
+
+/* 方向按钮单独配色，区分功能 */
+#upBtn, #downBtn, #leftBtn, #rightBtn {
+    background-color: #2196F3;
+    padding: 12px 20px; /* 放大按钮，方便点击 */
+}
+
+#upBtn:hover, #downBtn:hover, #leftBtn:hover, #rightBtn:hover {
+    background-color: #1976D2;
+}

@@ -15,8 +15,17 @@
             <button id="pauseBtn">暂停</button>
         </div>
         <canvas id="gameCanvas" width="600" height="600"></canvas>
+        <!-- 新增：方向控制按钮 -->
         <div class="controls">
-            <p>控制方式: 方向键或WASD键</p>
+            <p>控制方式: 方向键/WASD 或 点击按钮</p>
+            <div class="direction-buttons">
+                <button id="upBtn">↑ 上</button>
+                <div class="middle-buttons">
+                    <button id="leftBtn">← 左</button>
+                    <button id="rightBtn">右 →</button>
+                </div>
+                <button id="downBtn">↓ 下</button>
+            </div>
         </div>
     </div>
 

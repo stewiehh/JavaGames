@@ -1,11 +1,15 @@
-// 获取DOM元素
+// 获取DOM元素（新增4个方向按钮）
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 const startBtn = document.getElementById('startBtn');
 const pauseBtn = document.getElementById('pauseBtn');
+const upBtn = document.getElementById('upBtn');    // 上按钮
+const downBtn = document.getElementById('downBtn');  // 下按钮
+const leftBtn = document.getElementById('leftBtn');  // 左按钮
+const rightBtn = document.getElementById('rightBtn');// 右按钮
 
-// 游戏设置
+// 游戏设置（原有代码不变）
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
 let snake = [{x: 10, y: 10}];
@@ -18,9 +22,9 @@ let score = 0;
 let gameLoop;
 let isPaused = false;
 let gameSpeed = 150; // 初始速度(毫秒)
-let isGameRunning = false; // 新增：标记游戏是否正在运行
+let isGameRunning = false; // 标记游戏是否正在运行
 
-// 初始化游戏
+// 初始化游戏（原有代码不变）
 function initGame() {
     snake = [{x: 10, y: 10}];
     dx = 1;
@@ -33,7 +37,7 @@ function initGame() {
     isGameRunning = false; // 重置游戏状态
 }
 
-// 生成食物
+// 生成食物（原有代码不变）
 function generateFood() {
     food.x = Math.floor(Math.random() * tileCount);
     food.y = Math.floor(Math.random() * tileCount);
@@ -47,7 +51,7 @@ function generateFood() {
     }
 }
 
-// 绘制游戏元素
+// 绘制游戏元素（原有代码不变）
 function draw() {
     // 清空画布
     ctx.fillStyle = '#e6f7ff';
@@ -74,7 +78,7 @@ function draw() {
     );
 }
 
-// 更新游戏状态
+// 更新游戏状态（原有代码不变）
 function update() {
     if (isPaused) return;
     
@@ -123,12 +127,12 @@ function update() {
     draw();
 }
 
-// 游戏主循环
+// 游戏主循环（原有代码不变）
 function game() {
     update();
 }
 
-// 游戏结束
+// 游戏结束（原有代码不变）
 function gameOver() {
     clearInterval(gameLoop);
     isGameRunning = false;
@@ -137,7 +141,7 @@ function gameOver() {
     draw();
 }
 
-// 处理键盘输入（核心优化部分）
+// 处理键盘输入（原有代码不变）
 function handleKeyPress(e) {
     // 阻止按键默认行为（如页面滚动）
     e.preventDefault();
@@ -175,10 +179,50 @@ function handleKeyPress(e) {
     }
 }
 
-// 事件监听
+// 新增：处理方向按钮点击（核心逻辑）
+function handleDirectionClick(direction) {
+    // 仅在游戏运行时响应点击
+    if (!isGameRunning) return;
+    
+    // 当前移动方向（防止180度转向，和键盘控制逻辑一致）
+    const goingUp = dy === -1;
+    const goingDown = dy === 1;
+    const goingRight = dx === 1;
+    const goingLeft = dx === -1;
+    
+    // 根据点击的方向更新移动参数
+    switch(direction) {
+        case 'up':
+            if (!goingDown) { // 正在向下时，不能直接向上
+                nextDx = 0;
+                nextDy = -1;
+            }
+            break;
+        case 'down':
+            if (!goingUp) { // 正在向上时，不能直接向下
+                nextDx = 0;
+                nextDy = 1;
+            }
+            break;
+        case 'left':
+            if (!goingRight) { // 正在向右时，不能直接向左
+                nextDx = -1;
+                nextDy = 0;
+            }
+            break;
+        case 'right':
+            if (!goingLeft) { // 正在向左时，不能直接向右
+                nextDx = 1;
+                nextDy = 0;
+            }
+            break;
+    }
+}
+
+// 事件监听（新增方向按钮的点击监听）
 document.addEventListener('keydown', handleKeyPress);
 
-// 开始游戏按钮
+// 开始游戏按钮（原有代码不变）
 startBtn.addEventListener('click', () => {
     if (gameLoop) clearInterval(gameLoop);
     isPaused = false;
@@ -187,13 +231,19 @@ startBtn.addEventListener('click', () => {
     gameLoop = setInterval(game, gameSpeed);
 });
 
-// 暂停/继续按钮
+// 暂停/继续按钮（原有代码不变）
 pauseBtn.addEventListener('click', () => {
     if (!isGameRunning) return; // 游戏未开始时不响应
     isPaused = !isPaused;
     pauseBtn.textContent = isPaused ? "继续" : "暂停";
 });
 
-// 初始化游戏
+// 新增：绑定4个方向按钮的点击事件
+upBtn.addEventListener('click', () => handleDirectionClick('up'));
+downBtn.addEventListener('click', () => handleDirectionClick('down'));
+leftBtn.addEventListener('click', () => handleDirectionClick('left'));
+rightBtn.addEventListener('click', () => handleDirectionClick('right'));
+
+// 初始化游戏（原有代码不变）
 initGame();
 draw();
